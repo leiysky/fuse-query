@@ -19,6 +19,7 @@ mod plan_expression_constant;
 mod plan_expression_field;
 mod plan_expression_function;
 mod plan_filter;
+mod plan_join;
 mod plan_limit;
 mod plan_node;
 mod plan_parser;

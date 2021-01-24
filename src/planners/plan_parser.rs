@@ -159,12 +159,23 @@ impl Planner {
         ctx: FuseQueryContextRef,
         from: &[sqlparser::ast::TableWithJoins],
     ) -> FuseQueryResult<PlanNode> {
-        match from.len() {
-            0 => Ok(PlanBuilder::empty().build()?),
-            1 => self.plan_table_with_joins(ctx, &from[0]),
-            _ => Err(FuseQueryError::Internal(
-                "Cannot support JOIN clause".to_string(),
-            )),
+        if from.len() == 0 {
+            Ok(PlanBuilder::empty().build()?)
+        } else if from.len() == 1 {
+            self.plan_table_with_joins(ctx, &from[0])
+        } else {
+            // Build left deep join
+            from.iter().fold(
+                self.plan_table_with_joins(ctx.clone(), &from[0]),
+                |acc, t| match acc {
+                    Err(_) => acc,
+                    Ok(ref lhs) => self.join(
+                        &sqlparser::ast::JoinOperator::CrossJoin,
+                        lhs,
+                        &self.plan_table_with_joins(ctx.clone(), t)?,
+                    ),
+                },
+            )
         }
     }
 
@@ -173,7 +184,15 @@ impl Planner {
         ctx: FuseQueryContextRef,
         t: &sqlparser::ast::TableWithJoins,
     ) -> FuseQueryResult<PlanNode> {
-        self.create_relation(ctx, &t.relation)
+        let data_source = self.create_relation(ctx.clone(), &t.relation)?;
+        t.joins.iter().fold(Ok(data_source), |acc, j| match acc {
+            Err(_) => acc,
+            Ok(ref prev_plan) => self.join(
+                &j.join_operator,
+                prev_plan,
+                &self.create_relation(ctx.clone(), &j.relation)?,
+            ),
+        })
     }
 
     fn create_relation(
@@ -357,5 +376,14 @@ impl Planner {
             }
             _ => Ok(input.clone()),
         }
+    }
+
+    fn join(
+        &self,
+        join_operator: &sqlparser::ast::JoinOperator,
+        lhs: &PlanNode,
+        rhs: &PlanNode,
+    ) -> FuseQueryResult<PlanNode> {
+        unimplemented!()
     }
 }
