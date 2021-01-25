@@ -106,6 +106,16 @@ impl PlanBuilder {
         })))
     }
 
+    /// Apply a join with right hand side plan
+    pub fn join(
+        &self,
+        join_operator: &sqlparser::ast::JoinOperator,
+        rhs: &PlanNode,
+    ) -> FuseQueryResult<Self> {
+        let left_input_schema = self.plan.schema();
+        let right_input_schema = rhs.schema();
+    }
+
     /// Apply a filter
     pub fn filter(&self, expr: ExpressionPlan) -> FuseQueryResult<Self> {
         Ok(Self::from(&PlanNode::Filter(FilterPlan {

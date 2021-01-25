@@ -2,23 +2,33 @@
 //
 // Code is licensed under AGPL License, Version 3.0.
 
-use crate::datasources::{Partitions, Statistics};
-use crate::datavalues::DataSchemaRef;
+use crate::{
+    datavalues::DataSchemaRef,
+    planners::{ExpressionPlan, PlanNode},
+};
+use std::sync::Arc;
 
-enum JoinType {
+// TODO: Support USING clause
+#[derive(Clone)]
+pub enum JoinType {
     Inner,
     LeftOuter,
     RightOuter,
     FullOuter,
-    Cross,
+    CrossJoin,
 }
 
 #[derive(Clone)]
-pub struct Join {
-    pub db: String,
-    pub table: String,
-    pub schema: DataSchemaRef,
-    pub partitions: Partitions,
-    pub statistics: Statistics,
-    pub description: String,
+pub struct JoinPlan {
+    pub lhs: Arc<PlanNode>,
+    pub rhs: Arc<PlanNode>,
+    pub join_type: JoinType,
+    // Natural Join if None
+    pub condition: Option<ExpressionPlan>,
+}
+
+impl JoinPlan {
+    pub fn schema(&self) -> DataSchemaRef {
+        unimplemented!()
+    }
 }

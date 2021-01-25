@@ -5,8 +5,8 @@
 use crate::datavalues::DataSchemaRef;
 use crate::error::{FuseQueryError, FuseQueryResult};
 use crate::planners::{
-    AggregatePlan, EmptyPlan, ExplainPlan, FilterPlan, LimitPlan, PlanBuilder, ProjectionPlan,
-    ReadDataSourcePlan, ScanPlan, SelectPlan, SettingPlan,
+    AggregatePlan, EmptyPlan, ExplainPlan, FilterPlan, JoinPlan, LimitPlan, PlanBuilder,
+    ProjectionPlan, ReadDataSourcePlan, ScanPlan, SelectPlan, SettingPlan,
 };
 
 #[derive(Clone)]
@@ -17,6 +17,7 @@ pub enum PlanNode {
     Filter(FilterPlan),
     Limit(LimitPlan),
     Scan(ScanPlan),
+    Join(JoinPlan),
     ReadSource(ReadDataSourcePlan),
     Explain(ExplainPlan),
     Select(SelectPlan),
@@ -29,6 +30,7 @@ impl PlanNode {
         match self {
             PlanNode::Empty(v) => v.schema(),
             PlanNode::Scan(v) => v.schema(),
+            PlanNode::Join(v) => v.schema(),
             PlanNode::Projection(v) => v.schema(),
             PlanNode::Aggregate(v) => v.schema(),
             PlanNode::Filter(v) => v.schema(),
@@ -44,6 +46,7 @@ impl PlanNode {
         match self {
             PlanNode::Empty(_) => "EmptyPlan",
             PlanNode::Scan(_) => "ScanPlan",
+            PlanNode::Join(_) => "JoinPlan",
             PlanNode::Projection(_) => "ProjectionPlan",
             PlanNode::Aggregate(_) => "AggregatePlan",
             PlanNode::Filter(_) => "FilterPlan",

@@ -41,6 +41,7 @@ pub use self::plan_expression_constant::constant;
 pub use self::plan_expression_field::field;
 pub use self::plan_expression_function::add;
 pub use self::plan_filter::FilterPlan;
+pub use self::plan_join::JoinPlan;
 pub use self::plan_limit::LimitPlan;
 pub use self::plan_node::PlanNode;
 pub use self::plan_projection::ProjectionPlan;

@@ -384,6 +384,6 @@ impl Planner {
         lhs: &PlanNode,
         rhs: &PlanNode,
     ) -> FuseQueryResult<PlanNode> {
-        unimplemented!()
+        PlanBuilder::from(lhs).join(join_operator, rhs)?.build()
     }
 }
