@@ -2,6 +2,8 @@
 //
 // Code is licensed under AGPL License, Version 3.0.
 
+use sqlparser::ast::JoinOperator;
+
 use crate::{
     datavalues::DataSchemaRef,
     planners::{ExpressionPlan, PlanNode},
@@ -16,6 +18,19 @@ pub enum JoinType {
     RightOuter,
     FullOuter,
     CrossJoin,
+}
+
+impl From<JoinOperator> for JoinType {
+    fn from(op: JoinOperator) -> JoinType {
+        match op {
+            JoinOperator::Inner(_) => JoinType::Inner,
+            JoinOperator::LeftOuter(_) => JoinType::LeftOuter,
+            JoinOperator::RightOuter(_) => JoinType::RightOuter,
+            JoinOperator::FullOuter(_) => JoinType::FullOuter,
+            JoinOperator::CrossJoin => JoinType::CrossJoin,
+            _ => unimplemented!()
+        }
+    }
 }
 
 #[derive(Clone)]
