@@ -115,24 +115,25 @@ impl PlanBuilder {
         join_condition: Option<ExpressionPlan>,
         rhs: &PlanNode,
     ) -> FuseQueryResult<Self> {
-        let left_input_schema = self.plan.schema();
-        let right_input_schema = rhs.schema();
+        unimplemented!()
+        // let left_input_schema = self.plan.schema();
+        // let right_input_schema = rhs.schema();
 
-        // TODO: Keep track of original table names
-        let fields = vec![left_input_schema.fields(), right_input_schema.fields()]
-            .into_iter()
-            .flat_map(|v| v.to_owned())
-            .collect();
+        // // TODO: Keep track of original table names
+        // let fields = vec![left_input_schema.fields(), right_input_schema.fields()]
+        //     .into_iter()
+        //     .flat_map(|v| v.to_owned())
+        //     .collect();
 
-        let new_schema = DataSchema::new(fields);
+        // let new_schema = DataSchema::new(fields);
 
-        Ok(Self::from(&PlanNode::Join(JoinPlan {
-            join_type: join_type,
-            condition: join_condition,
-            lhs: Arc::new(self.plan.clone()),
-            rhs: Arc::new(rhs.clone()),
-            schema: Arc::new(new_schema),
-        })))
+        // Ok(Self::from(&PlanNode::Join(JoinPlan {
+        //     join_type: join_type,
+        //     condition: join_condition,
+        //     lhs: Arc::new(self.plan.clone()),
+        //     rhs: Arc::new(rhs.clone()),
+        //     schema: Arc::new(new_schema),
+        // })))
     }
 
     /// Apply a filter

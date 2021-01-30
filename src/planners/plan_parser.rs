@@ -7,9 +7,10 @@ use crate::datavalues::{DataSchema, DataValue};
 use crate::error::{FuseQueryError, FuseQueryResult};
 use crate::planners::{
     plan_join::JoinType, DFExplainPlan, DFParser, DFStatement, ExplainPlan, ExpressionPlan,
-    PlanBuilder, PlanNode, Planner, SelectPlan, SettingPlan,
+    JoinPlan, PlanBuilder, PlanNode, Planner, SelectPlan, SettingPlan,
 };
 use sqlparser::ast::{FunctionArg, Statement, TableFactor};
+use std::sync::Arc;
 
 impl Planner {
     pub fn build_from_sql(
@@ -386,15 +387,27 @@ impl Planner {
     ) -> FuseQueryResult<PlanNode> {
         use sqlparser::ast::JoinConstraint;
         use sqlparser::ast::JoinOperator;
-        let join_meta = match join_operator {
-            JoinOperator::Inner(constraint) => (
-                JoinType::Inner,
-                match constraint {
-                    JoinConstraint::On(cond) => self.sql_to_rex(cond),
-                },
-            ),
+
+        let left_input_schema = lhs.schema();
+        let right_input_schema = rhs.schema();
+        // TODO: Keep track of original table names
+        let fields = vec![left_input_schema.fields(), right_input_schema.fields()]
+            .into_iter()
+            .flat_map(|v| v.to_owned())
+            .collect();
+        let new_schema = DataSchema::new(fields);
+
+        let mut join_plan = JoinPlan {
+            lhs: Arc::new(lhs.clone()),
+            rhs: Arc::new(rhs.clone()),
+            join_type: JoinType::Inner,
+            cnf_conditions: vec![],
+            schema: Arc::new(new_schema),
         };
-        // PlanBuilder::from(lhs).join(join_operator, rhs)?.build()
+
+        match join_operator {
+            JoinOperator::Inner(constraint) => {}
+        };
         unimplemented!()
     }
 }

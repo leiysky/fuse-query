@@ -39,7 +39,7 @@ pub struct JoinPlan {
     pub rhs: Arc<PlanNode>,
     pub join_type: JoinType,
     // Natural Join if None
-    pub condition: Option<ExpressionPlan>,
+    pub cnf_conditions: Vec<ExpressionPlan>,
 
     pub schema: DataSchemaRef,
 }
