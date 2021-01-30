@@ -40,6 +40,8 @@ pub struct JoinPlan {
     pub join_type: JoinType,
     // Natural Join if None
     pub condition: Option<ExpressionPlan>,
+
+    pub schema: DataSchemaRef,
 }
 
 impl JoinPlan {

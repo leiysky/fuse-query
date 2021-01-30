@@ -6,8 +6,8 @@ use crate::contexts::FuseQueryContextRef;
 use crate::datavalues::{DataSchema, DataValue};
 use crate::error::{FuseQueryError, FuseQueryResult};
 use crate::planners::{
-    DFExplainPlan, DFParser, DFStatement, ExplainPlan, ExpressionPlan, PlanBuilder, PlanNode,
-    Planner, SelectPlan, SettingPlan,
+    plan_join::JoinType, DFExplainPlan, DFParser, DFStatement, ExplainPlan, ExpressionPlan,
+    PlanBuilder, PlanNode, Planner, SelectPlan, SettingPlan,
 };
 use sqlparser::ast::{FunctionArg, Statement, TableFactor};
 
@@ -384,6 +384,17 @@ impl Planner {
         lhs: &PlanNode,
         rhs: &PlanNode,
     ) -> FuseQueryResult<PlanNode> {
-        PlanBuilder::from(lhs).join(join_operator, rhs)?.build()
+        use sqlparser::ast::JoinConstraint;
+        use sqlparser::ast::JoinOperator;
+        let join_meta = match join_operator {
+            JoinOperator::Inner(constraint) => (
+                JoinType::Inner,
+                match constraint {
+                    JoinConstraint::On(cond) => self.sql_to_rex(cond),
+                },
+            ),
+        };
+        // PlanBuilder::from(lhs).join(join_operator, rhs)?.build()
+        unimplemented!()
     }
 }
