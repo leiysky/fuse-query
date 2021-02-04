@@ -7,11 +7,10 @@ use std::sync::Arc;
 use crate::datavalues::{DataField, DataSchema, DataSchemaRef};
 use crate::error::FuseQueryResult;
 use crate::planners::{
-    field, AggregatePlan, DFExplainType, EmptyPlan, ExplainPlan, ExpressionPlan, FilterPlan,
-    JoinPlan, LimitPlan, PlanNode, ProjectionPlan, ScanPlan, SelectPlan,
+    field, plan_join::JoinType, AggregatePlan, DFExplainType, EmptyPlan, ExplainPlan,
+    ExpressionPlan, FilterPlan, JoinPlan, LimitPlan, PlanNode, ProjectionPlan, ScanPlan,
+    SelectPlan,
 };
-
-use super::plan_join::JoinType;
 
 pub struct PlanBuilder {
     plan: PlanNode,
@@ -111,29 +110,18 @@ impl PlanBuilder {
     /// Apply a join with right hand side plan
     pub fn join(
         &self,
-        join_type: JoinType,
-        join_condition: Option<ExpressionPlan>,
+        join_type: &JoinType,
+        join_conditions: &Vec<ExpressionPlan>,
+        schema: &DataSchema,
         rhs: &PlanNode,
     ) -> FuseQueryResult<Self> {
-        unimplemented!()
-        // let left_input_schema = self.plan.schema();
-        // let right_input_schema = rhs.schema();
-
-        // // TODO: Keep track of original table names
-        // let fields = vec![left_input_schema.fields(), right_input_schema.fields()]
-        //     .into_iter()
-        //     .flat_map(|v| v.to_owned())
-        //     .collect();
-
-        // let new_schema = DataSchema::new(fields);
-
-        // Ok(Self::from(&PlanNode::Join(JoinPlan {
-        //     join_type: join_type,
-        //     condition: join_condition,
-        //     lhs: Arc::new(self.plan.clone()),
-        //     rhs: Arc::new(rhs.clone()),
-        //     schema: Arc::new(new_schema),
-        // })))
+        Ok(Self::from(&PlanNode::Join(JoinPlan {
+            lhs: Arc::new(self.plan.clone()),
+            rhs: Arc::new(rhs.clone()),
+            join_type: join_type.to_owned(),
+            cnf_conditions: join_conditions.to_owned(),
+            schema: Arc::new(schema.clone()),
+        })))
     }
 
     /// Apply a filter

@@ -102,6 +102,13 @@ impl PlanNode {
                     plan = v.plan.as_ref().clone();
                     depth += 1;
                 }
+                PlanNode::Join(v) => {
+                    if with_parent {
+                        list.push(PlanNode::Join(v.clone()));
+                    }
+                    plan = v.lhs.as_ref().clone();
+                    depth += 1;
+                }
                 PlanNode::Explain(v) => {
                     if with_parent {
                         list.push(PlanNode::Explain(v.clone()));
@@ -163,6 +170,9 @@ impl PlanNode {
                 }
                 PlanNode::Select(_v) => {
                     builder = builder.select()?;
+                }
+                PlanNode::Join(v) => {
+                    builder = PlanBuilder::from(&PlanNode::Join(v.clone()))
                 }
                 PlanNode::Empty(_) => {}
                 PlanNode::Scan(_) => {}

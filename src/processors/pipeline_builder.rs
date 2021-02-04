@@ -63,6 +63,9 @@ impl PipelineBuilder {
                         )?))
                     })?;
                 }
+                PlanNode::Join(plan) => {
+                    pipeline.add_simple_transform(|| {});
+                }
                 PlanNode::Filter(plan) => {
                     pipeline.add_simple_transform(|| {
                         Ok(Box::new(FilterTransform::try_create(

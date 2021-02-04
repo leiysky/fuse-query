@@ -3,6 +3,7 @@
 // Code is licensed under AGPL License, Version 3.0.
 
 mod plan_filter_test;
+mod plan_join_test;
 mod plan_limit_test;
 mod plan_projection_test;
 mod plan_select_test;

@@ -7,10 +7,9 @@ use crate::datavalues::{DataSchema, DataValue};
 use crate::error::{FuseQueryError, FuseQueryResult};
 use crate::planners::{
     plan_join::JoinType, DFExplainPlan, DFParser, DFStatement, ExplainPlan, ExpressionPlan,
-    JoinPlan, PlanBuilder, PlanNode, Planner, SelectPlan, SettingPlan,
+    PlanBuilder, PlanNode, Planner, SelectPlan, SettingPlan,
 };
-use sqlparser::ast::{FunctionArg, Statement, TableFactor};
-use std::sync::Arc;
+use sqlparser::ast::{FunctionArg, JoinConstraint, JoinOperator, Statement, TableFactor};
 
 impl Planner {
     pub fn build_from_sql(
@@ -385,9 +384,6 @@ impl Planner {
         lhs: &PlanNode,
         rhs: &PlanNode,
     ) -> FuseQueryResult<PlanNode> {
-        use sqlparser::ast::JoinConstraint;
-        use sqlparser::ast::JoinOperator;
-
         let left_input_schema = lhs.schema();
         let right_input_schema = rhs.schema();
         // TODO: Keep track of original table names
@@ -397,17 +393,40 @@ impl Planner {
             .collect();
         let new_schema = DataSchema::new(fields);
 
-        let mut join_plan = JoinPlan {
-            lhs: Arc::new(lhs.clone()),
-            rhs: Arc::new(rhs.clone()),
-            join_type: JoinType::Inner,
-            cnf_conditions: vec![],
-            schema: Arc::new(new_schema),
+        let mut constraint: Option<&JoinConstraint> = None;
+        let join_type = match join_operator {
+            JoinOperator::Inner(cons) => {
+                constraint = Some(cons);
+                JoinType::Inner
+            }
+            JoinOperator::LeftOuter(cons) => {
+                constraint = Some(cons);
+                JoinType::LeftOuter
+            }
+            JoinOperator::RightOuter(cons) => {
+                constraint = Some(cons);
+                JoinType::RightOuter
+            }
+            JoinOperator::FullOuter(cons) => {
+                constraint = Some(cons);
+                JoinType::FullOuter
+            }
+            JoinOperator::CrossJoin => JoinType::CrossJoin,
+            _ => return Err(FuseQueryError::Plan("Unsupported Join type".to_string())),
         };
 
-        match join_operator {
-            JoinOperator::Inner(constraint) => {}
-        };
-        unimplemented!()
+        let mut join_conditions = vec![];
+        if let Some(cons) = constraint {
+            match cons {
+                JoinConstraint::On(expr) => {
+                    join_conditions.push(self.sql_to_rex(expr, &new_schema)?);
+                }
+                // TODO: Support NATURAL JOIN and USING clause
+                _ => return Err(FuseQueryError::Plan("Unsupported Join type".to_string())),
+            }
+        }
+        PlanBuilder::from(lhs)
+            .join(&join_type, &join_conditions, &new_schema, rhs)?
+            .build()
     }
 }

@@ -21,6 +21,7 @@ impl PlanNode {
             PlanNode::Aggregate(plan) => plan.input.accept(visitor)?,
             PlanNode::Filter(plan) => plan.input.accept(visitor)?,
             PlanNode::Limit(plan) => plan.input.accept(visitor)?,
+            PlanNode::Join(plan) => plan.lhs.accept(visitor).and(plan.rhs.accept(visitor))?,
             PlanNode::Scan(..)
             | PlanNode::Empty(..)
             | PlanNode::Select(..)
@@ -133,6 +134,9 @@ impl PlanNode {
                     }
                     PlanNode::Select(plan) => {
                         write!(f, "{:?}", plan.plan)
+                    }
+                    PlanNode::Join(plan) => {
+                        write!(f, "Left: {:?} Right: {:?}", plan.lhs, plan.rhs)
                     }
                     PlanNode::Scan(_) | PlanNode::SetVariable(_) => {
                         write!(f, "")
